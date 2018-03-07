@@ -31,6 +31,7 @@ contract test is Ownable {
   uint32 public period;
   uint public ticketPrice;
   uint16 public feePercentage = 5;
+  uint accumulativeFee;
 
   function setTicketPrice(uint _ticketPrice)
     external
@@ -49,7 +50,7 @@ contract test is Ownable {
     onlyOwner
     public
   {
-    require(this.balance >= value);
+    require(accumulativeFee >= value);
     msg.sender.transfer(value);
   }
 
@@ -83,7 +84,9 @@ contract test is Ownable {
   {
     require(block.timestamp <= games[gameId].expiredAt);
     require(msg.value >= ticketPrice);
-    games[gameId].prize += ticketPrice * (1 - feePercentage / 100);
+    uint fee = ticketPrice * feePercentage / 100;
+    accumulativeFee += fee;
+    games[gameId].prize += ticketPrice - fee;
     games[gameId].participants.push(msg.sender);
     // Trigger finishiGame when call purchaseTicket after expiredAt.
     // Unless no one call purchaseTicket after expiredAt, the game wouldn't finish.
